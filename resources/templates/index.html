@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <!-- Include Chart.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  </head>
+  <body>
+    <!-- Form to select a video and set confidence -->
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="video" />
+      <br />
+      <textarea name="confidence"></textarea>
+      <br />
+      <input type="submit" value="Apply" />
+    </form>
+    <!-- Divs to create two columns -->
+    <div style="display: flex">
+      <!-- Column to display video -->
+      <div style="width: 50%">
+        <!-- Video element -->
+        <video src="{{ video_url }}" controls></video>
+      </div>
+      <!-- Column to display chart -->
+      <div style="width: 50%">
+        <!-- Canvas element for chart -->
+        <canvas id="myChart"></canvas>
+      </div>
+    </div>
+    <!-- Script to draw chart -->
+    <script>
+      var ctx = document.getElementById("myChart").getContext("2d");
+      var chart = new Chart(ctx, {
+        // Chart configuration
+      });
+    </script>
+  </body>
+</html>

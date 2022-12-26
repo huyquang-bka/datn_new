@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  </head>
+  <body>
+    <!-- Chart div element -->
+    <div id="myChart"></div>
+
+    <script>
+      function updateChart() {
+        // Fetch the chart data from the Flask route
+        fetch("/chart")
+          .then((response) => response.json())
+          .then((data) => {
+            // Update the chart using Plotly
+            Plotly.react("myChart", data);
+          });
+      }
+
+      // Update the chart every 100 milliseconds (1 second)
+      setInterval(updateChart, 1000);
+    </script>
+  </body>
+</html>
