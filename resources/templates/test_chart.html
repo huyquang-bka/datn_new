@@ -38,19 +38,6 @@
               },
             },
           });
-
-          // Update the chart data every 1 second
-          setInterval(() => {
-            // Fetch the updated chart data from the Flask route
-            fetch("/chart")
-              .then((response) => response.json())
-              .then((data) => {
-                // Update the chart data and redraw the chart
-                myChart.data.labels = data.labels;
-                myChart.data.datasets[0].data = data.data;
-                myChart.update();
-              });
-          }, 1000);
         });
     </script>
   </body>
