@@ -1,11 +1,11 @@
+import random
 import time
 import cv2
-from flask import Flask, Response, render_template, request, redirect, url_for
+from flask import Flask, Response, jsonify, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, emit
 from threading import Thread
 from queue import Queue
 from datetime import datetime
-import chartjs
 
 app = Flask(__name__, template_folder="resources/templates")
 
@@ -52,14 +52,15 @@ def gen(capture_queue: Queue):
         time.sleep(0.2)
 
 
-@app.route('/chart')
-def chart():
-    global count, fps, car, bus, truck, motorbike
-    labels = ["Car", "Bus", "Truck", "Motorbike"]
-    data = [10, 20, 30, 40]
+@app.route('/data')
+def data():
+    # global count, fps, car, bus, truck, motorbike
+    new_dict = {"car": random.randint(0, 10), "bus": random.randint(0, 10), "truck": random.randint(0, 10), "motorbike": random.randint(0, 10)}
+    return jsonify(new_dict)
 
-    return render_template("test_chart.html", labels=labels, data=data)
-
+@app.route('/realtime-chart')
+def realtime_chart():
+    return render_template("rt_chart_2.html")
 
 @ app.route('/start')
 def video():
@@ -85,13 +86,11 @@ def get_fps():
 
 def capture(capture_queue: Queue):
     global stop_thread
-    cap = cv2.VideoCapture(r"C:\Users\Admin\Downloads\video-1636524259.mp4")
+    cap = cv2.VideoCapture(0)
     while True:
         ret, image = cap.read()
         if not ret:
-            cap = cv2.VideoCapture(
-                r"C:\Users\Admin\Downloads\video-1636524259.mp4")
-            continue
+            break
         if capture_queue.empty():
             capture_queue.put(image)
         if stop_thread:
