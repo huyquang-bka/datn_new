@@ -1,37 +1,39 @@
-from datetime import datetime
-from flask import Flask, render_template, jsonify, request
-from flask_socketio import SocketIO
-from threading import Lock
+from threading import Thread
+import time
 
-app = Flask(__name__, template_folder="resources/templates")
-socketio = SocketIO(app, cors_allowed_origins="*")
+import cv2
 
-thread = None
-thread_lock = Lock()
+stop_thread = False
 
-def get_new_text():
-    # Replace this with a function to retrieve the new text
-    return {"fps": datetime.now().strftime("%H:%M:%S"), "count": datetime.now().strftime("%y%m%d %H:%M:%S")}
-
-def background_thread():
-    print("Generating random sensor values")
-    while True:
-        text = get_new_text()
-        socketio.emit('dict_update', text, broadcast=True)
-        socketio.sleep(1)
-
-@socketio.on('connect')
-def connect():
-    global thread
-    print('Client connected')
-    with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(background_thread)
+class SomeThread(Thread):
+    def __init__(self):
+        super().__init__()
+        self.__is_active = False
     
-@app.route('/text')
-def index():
-    return render_template("text.html")
+    def run(self):
+        cap = cv2.VideoCapture(0)
+        self.__is_active = True
+        while self.__is_active:
+            print(time.time())
+            ret, frame = cap.read()
+            time.sleep(1)
+            if stop_thread:
+                break
+        cap.release()
+        self.stop()
+    
+    def stop(self):
+        self.__is_active = False
+        
+        
+def stop():
+    global stop_thread
+    stop_thread = True
 
+t1 = SomeThread()
+t2 = Thread(target=stop)
 
-if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=6299)
+t1.start()
+time.sleep(7)
+t2.start()
+t2.join()

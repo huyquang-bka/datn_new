@@ -10,7 +10,7 @@
 
     <script>
       // Fetch the chart data from the Flask route
-      fetch("/chart")
+      fetch("/data")
         .then((response) => response.json())
         .then((data) => {
           // Render the chart using Chart.js
@@ -21,7 +21,7 @@
               labels: data.labels,
               datasets: [
                 {
-                  label: "My Chart",
+                  label: "Vehicle count",
                   data: data.data,
                 },
               ],
@@ -42,7 +42,7 @@
           // Update the chart data every 1 second
           setInterval(() => {
             // Fetch the updated chart data from the Flask route
-            fetch("/chart")
+            fetch("/data")
               .then((response) => response.json())
               .then((data) => {
                 // Update the chart data and redraw the chart
