@@ -88,7 +88,7 @@ class Tracking(Detection):
                 x1, y1, x2, y2 = list(
                     map(lambda x: max(0, int(x)), bbox_xyxy[i]))
                 id = int(indentities[i])
-                track_dict[id] = [x1, y1, x2, y2, categories[i]]
+                track_dict[id] = [x1, y1, x2, y2, int(categories[i])]
         return track_dict
 
 

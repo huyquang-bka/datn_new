@@ -1,103 +1,101 @@
 import time
 import cv2
-from flask import Flask, Response, render_template, request, redirect, url_for
-from flask_socketio import SocketIO, emit
+from flask import Flask, Response, jsonify, render_template, request, redirect, url_for
 from threading import Thread
 from queue import Queue
-from datetime import datetime
-import chartjs
+import pandas as pd
+import numpy as np
+from main_app.util.detect_yolov5 import Tracking
+from main_app.util.tools import count_object, polygon
+
 
 app = Flask(__name__, template_folder="resources/templates")
 
-socketio = SocketIO(app, cors_allowed_origins="*")
-
 capture_queue = Queue()
 stop_thread = False
-count = 0
-fps = 0
-car = 0
-bus = 0
-truck = 0
-motorbike = 0
+count_object_dict = {"car": 0, "truck": 0, "bus": 0, "motorbike": 0}
 
+tracker = Tracking()
+tracker.weights = r"resources/Weight/yolov5s.pt"
+tracker.imgsz = 640
+tracker.device = "cpu"
+tracker.conf_thres = 0.25
+tracker.classes = [2, 3, 5, 7]
+tracker.agnostic_nms = True
+tracker.half = False
+tracker._load_model()
 
-@app.route('/')
-def index():
-    return "Hello World"
+        
+def capture(capture_queue: Queue):
+    global stop_thread, count_object_dict
+    path = "/Users/huyquang/Downloads/truong_chinh.mov"
+    cap = cv2.VideoCapture(path)
+    while True:
+        ret, image = cap.read()
+        if not ret:
+            break
+        if capture_queue.empty():
+            capture_queue.put(image)
+        if stop_thread:
+            count_object_dict = {"car": 0, "truck": 0, "bus": 0, "motorbike": 0}
+            break
+        time.sleep(0.03)
 
 
 def gen(capture_queue: Queue):
-    global stop_thread, count, fps, car, bus, truck, motorbike
+    global stop_thread, count_object_dict
+    # stop_thread = True
+    # time.sleep(1)
     stop_thread = False
     t1 = Thread(target=capture, args=(capture_queue, ), daemon=True)
     t1.start()
+    old_dict = {}
     while True:
         if capture_queue.empty():
             time.sleep(0.001)
             continue
         image = capture_queue.get()
-        image = cv2.resize(image, (640, 480))
-        image = cv2.putText(image, str(time.time()), (10, 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-        motorbike += 4
-        car += 3
-        truck += 2
-        bus += 1
-        count = motorbike + car + truck + bus
-        fps = datetime.now().strftime("%H:%M:%S")
+        id_dict = tracker.track(image)
+        count_dict = count_object(old_dict, id_dict, polygon)
+        for key, value in count_dict.items():
+            count_object_dict[key] += value
+        old_dict = id_dict.copy()
+        cv2.polylines(image, [polygon], True, (0, 255, 0), 2)
+        for key, value in id_dict.items():
+            x1, y1, x2, y2 = value[:4]
+            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
         ret, jpeg = cv2.imencode('.jpg', image)
         frame = jpeg.tobytes()
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        time.sleep(0.2)
+           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        
 
+################################################################################################
 
-@app.route('/chart')
-def chart():
-    global count, fps, car, bus, truck, motorbike
-    labels = ["Car", "Bus", "Truck", "Motorbike"]
-    data = [10, 20, 30, 40]
+@app.route('/')
+def index():
+    return "Hello World"
 
-    return render_template("test_chart.html", labels=labels, data=data)
+@app.route('/data')
+def data():
+    global count_object_dict
+    return jsonify(count_object_dict)
 
-
-@ app.route('/start')
+@app.route('/start')
 def video():
     return Response(gen(capture_queue), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
-@ app.route('/stop')
+@app.route('/stop')
 def video_stop():
-    global stop_thread
+    global stop_thread, count_object_dict
     stop_thread = True
+    count_object_dict = {"car": 0, "truck": 0, "bus": 0, "motorbike": 0}
     return "Stop video"
 
-
-@ app.route('/get_count')
-def get_count():
-    return str(count)
-
-
-@ app.route('/get_fps')
-def get_fps():
-    return str(fps)
-
-
-def capture(capture_queue: Queue):
-    global stop_thread
-    cap = cv2.VideoCapture(r"C:\Users\Admin\Downloads\video-1636524259.mp4")
-    while True:
-        ret, image = cap.read()
-        if not ret:
-            cap = cv2.VideoCapture(
-                r"C:\Users\Admin\Downloads\video-1636524259.mp4")
-            continue
-        if capture_queue.empty():
-            capture_queue.put(image)
-        if stop_thread:
-            break
-        time.sleep(0.03)
-
+@app.route('/chart')
+def chart():
+    return render_template('chart.html')
+            
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=6299)
