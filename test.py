@@ -19,8 +19,8 @@ class SomeThread(Thread):
             time.sleep(1)
             if stop_thread:
                 break
-        cap.release()
         self.stop()
+        self.join()
     
     def stop(self):
         self.__is_active = False
