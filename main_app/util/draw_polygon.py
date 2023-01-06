@@ -2,13 +2,14 @@ import cv2
 
 points = []
 
+
 def get_mouse_click(event, x, y, flags, param):
     global points
     if event == cv2.EVENT_LBUTTONDOWN:
         points.append([x, y])
 
 
-path = r"/Users/huyquang/Downloads/truong_chinh.mov"
+path = r"C:\Users\Admin\Downloads\00005.MTS"
 cap = cv2.VideoCapture(path)
 image = cap.read()[1]
 cv2.namedWindow("image")
