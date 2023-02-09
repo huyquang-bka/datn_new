@@ -17,16 +17,12 @@ st.set_page_config(layout="wide", page_title="Traffic App",
 # create columns video and chart
 w, h = 480, 270
 
-
 def on_btn_start():
-    # with st.container():
-    #     col1, _, col2 = st.columns([2, 1, 1])
-    # with col1.container():
-    st_frame = st.empty()
-    st_frame.write(
+    col1, col2 = st.columns(2)
+    col1.write(
         f"""<img src="{START_CAMERA_URL}" object-fit="contain" width="{w}" height="{h}" class="center">""", unsafe_allow_html=True)
     # with col2.container():
-    st.markdown(
+    col2.markdown(
         f"""<iframe src="{CHART_URL}" object-fit="contain" width="{480}" height="{360}" allowfullscreen></iframe>""", unsafe_allow_html=True)
 
 
@@ -34,14 +30,6 @@ def on_btn_stop():
     requests.get(STOP_URL)
     st.write(
         "<h1 style='text-align: center; color: Red;'>Camera stopped</h1>", unsafe_allow_html=True)
-    try:
-        del st_frame
-    except:
-        pass
-    # image = cv2.imread("stop.png")
-    # rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # st_frame.markdown("Camera stopped")
-    # st.image(rgb, width=640)
 
 
 options = st.sidebar.selectbox("Select option", ["Dashboard", "Statistic"])

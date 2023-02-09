@@ -32,7 +32,7 @@ print("Load model success, names: ", tracker.names)
 
 def capture(capture_queue: Queue):
     global stop_thread, count_object_dict
-    path = r"C:\Users\Admin\Downloads\00005.MTS"
+    path = "resources/Video/00005.MTS"
     cap = cv2.VideoCapture(path)
     while True:
         ret, image = cap.read()
@@ -45,7 +45,7 @@ def capture(capture_queue: Queue):
             count_object_dict = {
                 "car": 0, "motorbike": 0}
             break
-        time.sleep(0.035)
+        time.sleep(0.04)
 
 
 def gen(capture_queue: Queue):
